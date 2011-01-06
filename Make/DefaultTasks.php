@@ -44,6 +44,20 @@ class DefaultTasks
 
 
 	/**
+	 * Writes to file.
+	 */
+	function write($file, $content)
+	{
+		$this->project->log("Writing file $file");
+		if (!is_dir($dir = dirname($file))) {
+			mkdir($dir, 0777, TRUE);
+		}
+		file_put_contents($file, $content);
+	}
+
+
+
+	/**
 	 * Creates directory when it does not exist.
 	 */
 	function createDir($path)
@@ -76,8 +90,8 @@ class DefaultTasks
 
 		} elseif (is_file($source)) {
 			$this->project->log("Copying file $source to $dest");
-			if (!is_dir($dest)) {
-				mkdir(dirname($dest), 0777, TRUE);
+			if (!is_dir($dir = dirname($dest))) {
+				mkdir($dir, 0777, TRUE);
 			}
 			copy($source, $dest);
 
