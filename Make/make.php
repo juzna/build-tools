@@ -16,23 +16,19 @@ require __DIR__ . '/Project.php';
 require __DIR__ . '/DefaultTasks.php';
 
 
-// usage: make.php [build-file[:target]] [args, ...]
-$args = $_SERVER['argv'];
-array_shift($args);
-@list($buildFile, $target) = explode(':', array_shift($args));
-
-
 // initialize project
 set_time_limit(0);
 date_default_timezone_set('Europe/Prague');
 
+$options = getopt('f:t:a:v');
+
 $project = new Project;
-$project->verbose = FALSE;
+$project->verbose = isset($options['v']);
 DefaultTasks::initialize($project);
 
 
 // load build file
-$buildFile = $buildFile ?: 'build.php';
+$buildFile = isset($options['f']) ? $options['f'] : 'build.php';
 if (!is_file($buildFile)) {
 	die("Missing build file $buildFile");
 }
@@ -41,5 +37,6 @@ require $buildFile;
 
 
 // run
-$target = $target ?: 'main';
+$target = isset($options['t']) ? $options['t'] : 'main';
+$args = isset($options['a']) ? (array) $options['a'] : array();
 $project->run($target, $args);
