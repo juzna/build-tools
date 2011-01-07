@@ -5,10 +5,21 @@
  *
  * Call task 'main' to build a full release.
  * The release built will be stored in 'dist' directory.
-*/
+ * 
+ * Can be used for version 2.0 and 0.9.5 or higher (branch v0.9.x).
+ */
 
 require 'tools/Nette/loader.php';
 use Nette\Finder;
+
+
+// configuration
+$project->gitExecutable = 'C:\Program Files\Git\bin\git.exe';
+$project->phpExecutable = realpath('tools/PHP-5.3/php.exe');
+$project->php52Executable = realpath('tools/PHP-5.2/php.exe');
+$project->apiGenExecutable = realpath('tools/apigen/apigen.php');
+$project->zipExecutable = realpath('tools/7zip/7z.exe');
+$project->compilerExecutable = realpath('tools/Google-Closure-Compiler/compiler.jar');
 
 
 // add custom tasks
@@ -21,15 +32,6 @@ require 'tasks/convert52.php';
 require 'tasks/convert53.php';
 require 'tasks/php.php';
 require 'tasks/zip.php';
-
-
-// configure tasks
-$project->gitExecutable = 'C:\Program Files\Git\bin\git.exe';
-$project->phpExecutable = realpath('tools/PHP-5.3/php.exe');
-$project->php52Executable = realpath('tools/PHP-5.2/php.exe');
-$project->apiGenExecutable = realpath('tools/apigen/apigen.php');
-$project->zipExecutable = realpath('tools/7zip/7z.exe');
-$project->compilerExecutable = realpath('tools/Google-Closure-Compiler/compiler.jar');
 
 
 $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) use ($project) {
