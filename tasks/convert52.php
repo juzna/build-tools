@@ -27,8 +27,10 @@ $project->convert52 = function($file, $prefixed, array $classes = array()) {
 	}
 
 	// add @package to phpDoc
-	list(, $namespace) = Nette\String::match($s, '#^namespace\s+(Nette[a-zA-Z0-9_\\\\]*);#m');
-	if ($namespace) $s = preg_replace('#^ \*\/#m', " * @package $namespace\n\$0", $s, 1);
+	if (!strpos($s, '@package')) {
+		list(, $namespace) = Nette\String::match($s, '#^namespace\s+(Nette[a-zA-Z0-9_\\\\]*);#m');
+		if ($namespace) $s = preg_replace('#^ \*\/#m', " * @package $namespace\n\$0", $s, 1);
+	}
 
 
 	// simple replacements

@@ -48,7 +48,7 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	$project->gitClone('git://github.com/nette/nette.git', $branch, $dir53);
 	if ($branch === 'v0.9.x') {
 		// 3rdParty
-		$project->gitClone('git://github.com/nette/dibi.git', 'master', "$dir53/3rdParty/dibi");
+		$project->gitClone('git://github.com/dg/dibi.git', 'master', "$dir53/3rdParty/dibi");
 		$project->write("$dir53/3rdParty/dibi/netterobots.txt", 'Disallow: /dibi-minified');
 	} else {
 		$project->gitClone('git://github.com/nette/examples.git', $branch, "$dir53/examples");
