@@ -77,6 +77,10 @@ class ShrinkPHP
 	public function addFile($file)
 	{
 		$content = file_get_contents($file);
+		
+		// special handling for Connection.php && Statement.php
+		$content = preg_replace('#class (Connection|Statement) extends.+#s', "if (class_exists('PDO')){ $0 }", $content); 
+
 		$tokens = token_get_all($content);
 
 		if ($this->useNamespaces) { // find namespace
