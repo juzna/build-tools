@@ -137,12 +137,9 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 
 
 	if ($branch !== 'v0.9.x') { // copy Nette to submodules
-		$project->copy("$dir53/Nette-minified/loader.php", "$dir53/examples/libs/Nette/Nette/loader.php");
-		$project->copy("$dir52p/Nette-minified/loader.php", "$dir52p/examples/libs/Nette/Nette/loader.php");
-		$project->copy("$dir52n/Nette-minified/loader.php", "$dir52n/examples/libs/Nette/Nette/loader.php");
-		$project->copy("$dir53/Nette-minified/loader.php", "$dir53/sandbox/libs/Nette/Nette/loader.php");
-		$project->copy("$dir52p/Nette-minified/loader.php", "$dir52p/sandbox/libs/Nette/Nette/loader.php");
-		$project->copy("$dir52n/Nette-minified/loader.php", "$dir52n/sandbox/libs/Nette/Nette/loader.php");
+		$project->copy("$dir53/Nette-minified", "$dir53/sandbox/libs/Nette");
+		$project->copy("$dir52p/Nette-minified", "$dir52p/sandbox/libs/Nette");
+		$project->copy("$dir52n/Nette-minified", "$dir52n/sandbox/libs/Nette");
 	}
 
 
