@@ -136,19 +136,6 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	$project->minify("$dir52n/Nette", "$dir52n/Nette-minified/nette.min.php", FALSE);
 
 
-	if ($branch !== 'v0.9.x') { // copy Nette to submodules
-		$project->copy("$dir53/Nette-minified", "$dir53/sandbox/libs/Nette");
-		$project->copy("$dir52p/Nette-minified", "$dir52p/sandbox/libs/Nette");
-		$project->copy("$dir52n/Nette-minified", "$dir52n/sandbox/libs/Nette");
-	}
-
-
-	// build API doc
-	$project->apiGen("$dir53/Nette", "$dir53/API-reference");
-	$project->apiGen("$dir52p/Nette", "$dir52p/API-reference");
-	$project->apiGen("$dir52n/Nette", "$dir52n/API-reference");
-
-
 	// lint PHP files
 	foreach (Finder::findFiles('*.php', '*.phpt')->from($dir53) as $file) {
 		$project->phpLint($file);
@@ -159,6 +146,22 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	foreach (Finder::findFiles('*.php', '*.phpt')->from($dir52n) as $file) {
 		$project->phpLint($file, $project->php52Executable);
 	}
+
+
+	if ($branch !== 'v0.9.x') { // copy Nette to submodules
+		$project->copy("$dir53/Nette", "$dir53/sandbox/libs/Nette");
+		$project->copy("$dir52p/Nette", "$dir52p/sandbox/libs/Nette");
+		$project->copy("$dir52n/Nette", "$dir52n/sandbox/libs/Nette");
+		$project->copy("$dir53/client-side/forms/netteForms.js", "$dir53/sandbox/www/js/netteForms.js");
+		$project->copy("$dir52p/client-side/forms/netteForms.js", "$dir52p/sandbox/www/js/netteForms.js");
+		$project->copy("$dir52n/client-side/forms/netteForms.js", "$dir52n/sandbox/www/js/netteForms.js");
+	}
+
+
+	// build API doc
+	$project->apiGen("$dir53/Nette", "$dir53/API-reference");
+	$project->apiGen("$dir52p/Nette", "$dir52p/API-reference");
+	$project->apiGen("$dir52n/Nette", "$dir52n/API-reference");
 
 
 	// create archives
