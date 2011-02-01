@@ -43,14 +43,7 @@ $project->minify = function($source, $dest, $useNamespaces = TRUE) use ($project
 	$content = trim(preg_replace("#[\t ]+(\r?\n)#", '$1', $content)); // right trim
 
 	// save minified Nette
-	if (!is_dir($dest)) {
-		mkdir($dest, 0777, TRUE);
-	}
-	file_put_contents($dest . '/loader.php', $content);
-	
-	if (is_file("$source/lockfile")) {
-		copy("$source/lockfile", "$dest/lockfile");
-	}
+	$project->write($dest, $content);
 };
 
 

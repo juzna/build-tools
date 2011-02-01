@@ -131,9 +131,9 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 
 
 	// build minified version
-	$project->minify("$dir53/Nette", "$dir53/Nette-minified", TRUE);
-	$project->minify("$dir52p/Nette", "$dir52p/Nette-minified", FALSE);
-	$project->minify("$dir52n/Nette", "$dir52n/Nette-minified", FALSE);
+	$project->minify("$dir53/Nette", "$dir53/Nette-minified/nette.min.php", TRUE);
+	$project->minify("$dir52p/Nette", "$dir52p/Nette-minified/nette.min.php", FALSE);
+	$project->minify("$dir52n/Nette", "$dir52n/Nette-minified/nette.min.php", FALSE);
 
 
 	if ($branch !== 'v0.9.x') { // copy Nette to submodules
