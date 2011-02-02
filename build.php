@@ -155,6 +155,15 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 		$project->copy("$dir53/client-side/forms/netteForms.js", "$dir53/sandbox/www/js/netteForms.js");
 		$project->copy("$dir52p/client-side/forms/netteForms.js", "$dir52p/sandbox/www/js/netteForms.js");
 		$project->copy("$dir52n/client-side/forms/netteForms.js", "$dir52n/sandbox/www/js/netteForms.js");
+		$project->delete("$dir53/sandbox/license.txt");
+		$project->delete("$dir52p/sandbox/license.txt");
+		$project->delete("$dir52n/sandbox/license.txt");
+		$project->delete("$dir53/examples/license.txt");
+		$project->delete("$dir52p/examples/license.txt");
+		$project->delete("$dir52n/examples/license.txt");
+		$project->delete("$dir53/tools/license.txt");
+		$project->delete("$dir52p/tools/license.txt");
+		$project->delete("$dir52n/tools/license.txt");
 	}
 
 
