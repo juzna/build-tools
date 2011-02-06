@@ -136,7 +136,11 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	$project->minify("$dir52n/Nette", "$dir52n/Nette-minified/nette.min.php", FALSE);
 
 
-	// lint PHP files
+	// lint & try run PHP files
+	$project->php("$dir53/Nette-minified/nette.min.php"); 
+	$project->php("$dir52p/Nette-minified/nette.min.php", $project->php52Executable); 
+	$project->php("$dir52n/Nette-minified/nette.min.php", $project->php52Executable); 
+	
 	foreach (Finder::findFiles('*.php', '*.phpt')->from($dir53) as $file) {
 		$project->phpLint($file);
 	}
