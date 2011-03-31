@@ -30,7 +30,7 @@ $project->minify = function($source, $dest, $useNamespaces = TRUE) use ($project
 	unlink("$source/_loader.php");
 
 	// put all files
-	$shrink->addFile("$source/Utils/shortcuts.php");
+	$shrink->addFile("$source/tools/shortcuts.php");
 	foreach ($files as $file) {
 		if (basename($file) !== 'NetteLoader.php') {
 			$shrink->addFile($file);
@@ -70,9 +70,9 @@ class ShrinkPHP
 	public function addFile($file)
 	{
 		$content = file_get_contents($file);
-		
+
 		// special handling for Connection.php && Statement.php
-		$content = preg_replace('#class (N?Connection|N?Statement) extends.+#s', "if (class_exists('PDO')){ $0 }", $content); 
+		$content = preg_replace('#class (N?Connection|N?Statement) extends.+#s', "if (class_exists('PDO')){ $0 }", $content);
 
 		$tokens = token_get_all($content);
 

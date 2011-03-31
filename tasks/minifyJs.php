@@ -4,12 +4,12 @@
 /**
  * Minifies Javascript a CSS.
  *
- * @param  string  file to process
+ * @param  file to process
  * @return void
  *
  * @depend $project->compilerExecutable (and Java)
  */
-$project->minifyJs = function($file) use ($project) {
+$project->minifyJs = function(SplFileInfo $file) use ($project) {
 	$project->log("Shrinking JS & CSS in $file");
 
 	$s = $orig = file_get_contents($file);

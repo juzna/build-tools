@@ -4,12 +4,12 @@
 /**
  * Converts file for PHP 5.2 package
  *
- * @param  string  file to convert
+ * @param  SplFileInfo  file to convert
  * @param  bool    prefixed?
  * @param  array   list of classes
  * @return void
  */
-$project->convert52 = function($file, $prefixed, array $classes = array()) {
+$project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = array()) {
 
 	foreach ($classes as $i => $type) {
 		if (($a = strrpos($type, '\\')) && !preg_match('#\\\\I[A-Z][^\\\\]+$#', $type)) {

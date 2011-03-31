@@ -5,7 +5,7 @@
  *
  * Call task 'main' to build a full release.
  * The release built will be stored in 'dist' directory.
- * 
+ *
  * Can be used for version 2.0 and 0.9.5 or higher (branch v0.9.x).
  */
 
@@ -137,10 +137,10 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 
 
 	// lint & try run PHP files
-	$project->php("$dir53/Nette-minified/nette.min.php"); 
-	$project->php("$dir52p/Nette-minified/nette.min.php", $project->php52Executable); 
-	$project->php("$dir52n/Nette-minified/nette.min.php", $project->php52Executable); 
-	
+	$project->php("$dir53/Nette-minified/nette.min.php");
+	$project->php("$dir52p/Nette-minified/nette.min.php", $project->php52Executable);
+	$project->php("$dir52n/Nette-minified/nette.min.php", $project->php52Executable);
+
 	foreach (Finder::findFiles('*.php', '*.phpt')->from($dir53) as $file) {
 		$project->phpLint($file);
 	}
