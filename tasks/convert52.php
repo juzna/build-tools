@@ -46,6 +46,8 @@ $project->convert52 = function($file, $prefixed, array $classes = array()) {
 	$s = preg_replace('#(\r\n){5,}#is', "\r\n\r\n\r\n\r\n", $s); // consolidate free space
 	$s = preg_replace("#'NETTE_PACKAGE', '.*'#", "'NETTE_PACKAGE', 'PHP 5.2" . ($prefixed ? ' prefixed' : '') . "'", $s); // loader.php
 	$s = str_replace('Nette\Framework::VERSION', ($prefixed ? 'N' : '') . 'Framework::VERSION', $s); // Homepage\default.latte
+	$s = str_replace('$application->onStartup[] = function() {', '{', $s); // bootstrap.php
+	$s = str_replace('$application->onStartup[] = function() use ($application) {', '{', $s); // bootstrap.php
 	$prefixed && $s = str_replace('Nette\Database\Drivers\Pdo', 'NPdo', $s); // Nette\Database\Connection.php
 
 
