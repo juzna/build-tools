@@ -4,7 +4,7 @@
  * Generates Nette\Loaders\NetteLoader::$list
  *
  * @param  string
- * @return array of found classes
+ * @return void
  */
 $project->netteLoader = function($folder) use ($project) {
 	$project->log("Generates Nette\\Loaders\\NetteLoader in $folder");
@@ -34,6 +34,4 @@ $project->netteLoader = function($folder) use ($project) {
 		throw new Exception('NetteLoader injection failed.');
 	}
 	file_put_contents($scriptFile, $script);
-
-	return array_keys($robot->getIndexedClasses());
 };

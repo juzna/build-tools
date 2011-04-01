@@ -101,12 +101,12 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	foreach (Finder::findFiles('*.php', '*.phpt', '*.inc', '*.phtml', '*.latte')->from($dir53)->exclude('www/adminer') as $file) {
 		$project->convert53($file);
 	}
-	$classes = $project->netteLoader("$dir53/Nette");
+	$project->netteLoader("$dir53/Nette");
 
 	// build 5.2 prefix package
 	$project->log("Building 5.2 prefixed package");
 	foreach (Finder::findFiles('*.php', '*.phpt', '*.inc', '*.phtml', '*.latte')->from($dir52p)->exclude('www/adminer') as $file) {
-		$project->convert52($file, TRUE, $classes);
+		$project->convert52($file, TRUE);
 	}
 	$project->netteLoader("$dir52p/Nette");
 

@@ -6,10 +6,9 @@
  *
  * @param  SplFileInfo  file to convert
  * @param  bool    prefixed?
- * @param  array   list of classes
  * @return void
  */
-$project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = array()) {
+$project->convert52 = function(SplFileInfo $file, $prefixed) {
 
 	$s = $orig = file_get_contents($file);
 
@@ -17,13 +16,6 @@ $project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = ar
 		unlink($file);
 		return;
 	}
-
-	// add @package to phpDoc
-	if (!strpos($s, '@package')) {
-		list(, $namespace) = Nette\String::match($s, '#^namespace\s+(Nette[a-zA-Z0-9_\\\\]*);#m');
-		if ($namespace) $s = preg_replace('#^ \*\/#m', " * @package $namespace\n\$0", $s, 1);
-	}
-
 
 	// simple replacements
 	$s = str_replace('__DIR__', 'dirname(__FILE__)', $s);
@@ -45,15 +37,6 @@ $project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = ar
 	$namespace = $s = '';
 	$uses = array('' => '');
 
-	foreach ($classes as $i => $type) {
-		if (($a = strrpos($type, '\\')) && !preg_match('#\\\\I[A-Z][^\\\\]+$#', $type)) {
-			$classes[$i] = substr($type, $a + 1); // remove namespace
-		} else {
-			unset($classes[$i]); // remove interfaces and classes without namespace
-		}
-	}
-	$classesRE = implode('|', $classes);
-
 	$replaceClass = function ($class) use ($prefixed, &$namespace, &$uses) {
 		if ($class === 'parent' || $class === 'self') {
 			return $class;
@@ -67,7 +50,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = ar
 		$short = substr($full, strrpos("\\$full", '\\'));
 
 		if (substr($full, 0, 6) === 'Nette\\') {
-			return $prefixed && !preg_match('#^I[A-Z]#', $short) ? "N$short" : $short;
+			return $prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short) ? "N$short" : $short;
 		} else {
 			return $short;
 		}
@@ -106,12 +89,10 @@ $project->convert52 = function(SplFileInfo $file, $prefixed, array $classes = ar
  			$s .= $parser->isNext(T_DOUBLE_COLON, T_VARIABLE) ? $replaceClass($identifier) : $identifier;
 
 		} elseif ($parser->is(T_DOC_COMMENT, T_COMMENT)) {
-			$token = preg_replace('#(@package\s*Nette)\\\\#', '$1~@~', $token); // protect @package Nette\Xyz
-			$token = preg_replace('#(?<=\W)\\\\?([a-z]{3,}\\\\)*(?=[a-z]{3,})#i', '', $token); // identifiers like \stdClass or Nette\Xyz or CLass
-			$prefixed && $token = preg_replace('#(?<![\w\\\\~:@-])(' . $classesRE . ')(?![\w\\\\~-])#', 'N$0', $token); // Nette classes without namespace
-			$token = str_replace('~@~', '\\', $token); // restore @package
-			$token = str_replace('Nette NFramework', 'Nette Framework', $token); // restore Nette Framework
-			$s .= $token;
+			// @var Class or \Class or Nm\Class or Class:: (preserves CLASS, @package)
+ 			$s .= preg_replace_callback('#((?:@var(?:\s+array of)?|returns?|param|throws|@link|property[\w-]*|@package)\s+)?(?<=\W)(\\\\?[A-Z][\w\\\\]+)(::)?()#', function($m) use ($replaceClass) {
+				return $m[1] . (substr($m[1], 0, 8) !== '@package' && preg_match('#[a-z]#', $m[2]) && ($m[1] || $m[3] || strpos($m[2], '\\') !== FALSE) ? $replaceClass($m[2]) : $m[2]) . $m[3];
+ 			}, $token);
 
  		} elseif ($parser->is(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE)) { // strings like 'Nette\Object'
  			$sl = $parser->is(T_CONSTANT_ENCAPSED_STRING) ? '1' : '1,2'; // num of slashes
@@ -170,6 +151,12 @@ class NClosureFix
 		return count(self::$vars)-1;
 	}
 }';
+	}
+
+
+	// add @package to phpDoc
+	if (!strpos($s, '@package') && $namespace) {
+		$s = preg_replace('#^ \*\/#m', " * @package $namespace\n\$0", $s, 1);
 	}
 
 
