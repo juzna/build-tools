@@ -17,11 +17,14 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 		return;
 	}
 
+	$renamed = array(
+		'Nette\DateTime' => 'DateTime53',
+	);
+
 	// simple replacements
 	$s = str_replace('__DIR__', 'dirname(__FILE__)', $s);
 	$s = str_replace('new static', 'new self', $s);
 	$s = str_replace('static::', 'self::', $s);
-	$s = str_replace('new \DateTime(', 'new \DateTime53(', $s);
 	$s = preg_replace('#=(.+) \?: #', '= ($tmp=$1) ? $tmp : ', $s); // expand ternary short cut
 	$s = preg_replace('#/\\*5\.2\*\s*(.*?)\s*\\*/#s', '$1', $s); // uncomment /*5.2* */
 	$s = preg_replace('#/\\*\\*/.*?/\\*\\*/\\s*#s', '', $s);  // remove /**/ ... /**/
@@ -37,7 +40,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$namespace = $s = '';
 	$uses = array('' => '');
 
-	$replaceClass = function ($class) use ($prefixed, &$namespace, &$uses) {
+	$replaceClass = function ($class) use ($prefixed, &$namespace, &$uses, $renamed) {
 		if ($class === 'parent' || $class === 'self') {
 			return $class;
 		}
@@ -50,7 +53,15 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 		$short = substr($full, strrpos("\\$full", '\\'));
 
 		if (substr($full, 0, 6) === 'Nette\\') {
-			return $prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short) ? "N$short" : $short;
+			if (isset($renamed[$full])) {
+				return $renamed[$full];
+
+			} elseif ($prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short)) {
+				return "N$short";
+
+			} else {
+				return $short;
+			}
 		} else {
 			return $short;
 		}
