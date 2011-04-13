@@ -17,9 +17,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 		return;
 	}
 
-	$renamed = array(
-		'Nette\DateTime' => 'DateTime53',
-	);
+	$renamed = include __DIR__ . '/convert52-renamedClasses.php';
 
 	// simple replacements
 	$s = str_replace('__DIR__', 'dirname(__FILE__)', $s);
@@ -29,10 +27,10 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$s = preg_replace('#/\\*5\.2\*\s*(.*?)\s*\\*/#s', '$1', $s); // uncomment /*5.2* */
 	$s = preg_replace('#/\\*\\*/.*?/\\*\\*/\\s*#s', '', $s);  // remove /**/ ... /**/
 	$s = preg_replace("#'NETTE_PACKAGE', '.*'#", "'NETTE_PACKAGE', 'PHP 5.2" . ($prefixed ? ' prefixed' : '') . "'", $s); // loader.php
-	$s = str_replace('Nette\Framework::VERSION', ($prefixed ? 'N' : '') . 'Framework::VERSION', $s); // Homepage\default.latte
+	$s = str_replace('{=Nette\Framework::VERSION', '{=' . ($prefixed ? 'N' : '') . 'Framework::VERSION', $s); // Homepage\default.latte
 	$s = str_replace('$application->onStartup[] = function() {', '{', $s); // bootstrap.php
 	$s = str_replace('$application->onStartup[] = function() use ($application) {', '{', $s); // bootstrap.php
-	$prefixed && $s = str_replace('Nette\Database\Drivers\Pdo', 'NPdo', $s); // Nette\Database\Connection.php
+	$prefixed && $s = str_replace('Nette\Database\Drivers\\\\', 'N', $s); // Nette\Database\Connection.php
 
 
 	// remove namespaces and add prefix
@@ -54,13 +52,13 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 
 		if (substr($full, 0, 6) === 'Nette\\') {
 			if (isset($renamed[$full])) {
-				return $renamed[$full];
-
-			} elseif ($prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short)) {
+				$short = $renamed[$full];
+			}
+			if ($prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short)) {
 				return "N$short";
 
 			} else {
-				return $short;
+				return ltrim($short, '\\');
 			}
 		} else {
 			return $short;
@@ -142,7 +140,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			}
 
 			$token .= substr(var_export(substr(trim($body), 1, -1), TRUE), 1, -1) . "')";
-			if (strpos($orig, 'String::replace') || strpos($orig, '$context->addService')) {
+			if (strpos($orig, 'StringUtils::replace') || strpos($orig, '$context->addService')) {
 				$token = "callback($token)";
 			}
 		}
