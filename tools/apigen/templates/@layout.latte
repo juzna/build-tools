@@ -5,7 +5,7 @@
  * @param  Apigen\CustomClassReflection $class
  * @param  string $fileRoot
  *}
-{default $class = NULL, $namespace = NULL}
+{default $class = NULL, $namespace = NULL, $top = TRUE}
 <!DOCTYPE html>
 <html>
 <head>
@@ -28,16 +28,19 @@
 	<h3>Namespaces</h3>
 	<ul>
 	{foreach $namespaces as $item}
-		<li><a href="{$item|namespaceLink}" {if $namespace === $item}class="active"{/if}>{$item ? $item : 'none'}</a></li>
+		<li n:class="$namespace === $item ? active"><a href="{$item|namespaceLink}">{$item ? $item : 'none'}</a>
+		{if $top && substr_count($iterator->nextValue, '\\') > 1}<ul>{var $top = FALSE}{elseif !$top && substr_count($iterator->nextValue, '\\') <= 1}</ul></li>{var $top = TRUE}{else}</li>{/if}
 	{/foreach}
 	</ul>
+
+	<hr>
 
 	<h3>Classes</h3>
 
 	<ul>
 	{foreach $classes as $item}
-	{continueIf $item->interface}
-		<li><a href="{$item|classLink}" {if $class === $item}class="active"{/if}>{$item->shortName}</a></li>
+	{continueIf $item->interface || $item->isSubclassOf(Exception)}
+		<li n:class="$class === $item ? active"><a href="{$item|classLink}">{$item->shortName}</a></li>
 	{/foreach}
 	</ul>
 
@@ -46,7 +49,16 @@
 	<ul>
 	{foreach $classes as $item}
 	{continueIf !$item->interface}
-		<li><a href="{$item|classLink}" {if $class === $item}class="active"{/if}>{$item->shortName}</a></li>
+		<li n:class="$class === $item ? active"><a href="{$item|classLink}">{$item->shortName}</a></li>
+	{/foreach}
+	</ul>
+
+	<h3>Exceptions</h3>
+
+	<ul>
+	{foreach $classes as $item}
+	{continueIf !$item->isSubclassOf(Exception)}
+		<li n:class="$class === $item ? active"><a href="{$item|classLink}">{$item->shortName}</a></li>
 	{/foreach}
 	</ul>
 </div>
