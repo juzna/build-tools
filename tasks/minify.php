@@ -25,12 +25,11 @@ $project->minify = function($source, $dest, $useNamespaces = TRUE) use ($project
 	$shrink->useNamespaces = $useNamespaces;
 
 	// put loader.php without loading part
-	file_put_contents("$source/_loader.php", preg_replace('#^require.*#sm', '', file_get_contents("$source/loader.php")));
+	file_put_contents("$source/_loader.php", preg_replace('#^(require|.*NetteLoader::).*;#m', '', file_get_contents("$source/loader.php")));
 	$shrink->addFile("$source/_loader.php");
 	unlink("$source/_loader.php");
 
 	// put all files
-	$shrink->addFile("$source/tools/shortcuts.php");
 	foreach ($files as $file) {
 		if (basename($file) !== 'NetteLoader.php') {
 			$shrink->addFile($file);
