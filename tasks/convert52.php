@@ -80,7 +80,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			do {
 				$class = $parser->fetchAll(T_STRING, T_NS_SEPARATOR);
 				$as = $parser->fetch(T_AS)
-					? $parser->fetchAll(T_STRING, T_NS_SEPARATOR)
+					? $parser->fetch(T_STRING)
 					: substr($class, strrpos("\\$class", '\\'));
 				$uses[strtolower($as)] = $class;
 			} while ($parser->fetch(','));
@@ -99,8 +99,15 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 
 		} elseif ($parser->isCurrent(T_DOC_COMMENT, T_COMMENT)) {
 			// @var Class or \Class or Nm\Class or Class:: (preserves CLASS, @package)
- 			$s .= preg_replace_callback('#((?:@var(?:\s+array of)?|returns?|param|throws|@link|property[\w-]*|@package)\s+)?(?<=\W)(\\\\?[A-Z][\w\\\\]+)(::)?()#', function($m) use ($replaceClass) {
-				return $m[1] . (substr($m[1], 0, 8) !== '@package' && preg_match('#[a-z]#', $m[2]) && ($m[1] || $m[3] || strpos($m[2], '\\') !== FALSE) ? $replaceClass($m[2]) : $m[2]) . $m[3];
+			$s .= preg_replace_callback('#((?:@var(?:\s+array of)?|returns?|param|throws|@link|property[\w-]*|@package)\s+)?(?<=\W)(\\\\?[A-Z][\w\\\\|]+)(::)?()#', function($m) use ($replaceClass) {
+				if (substr($m[1], 0, 8) === '@package' || (!$m[1] && !$m[3] && strpos($m[2], '\\') === FALSE)) {
+					return $m[0];
+				}
+				$parts = array();
+				foreach (explode('|', $m[2]) as $part) {
+					$parts[] = preg_match('#[a-z]#', $part) ? $replaceClass($part) : $part;
+				}
+				return $m[1] . implode('|', $parts) . $m[3];
 			}, $token);
 
  		} elseif ($parser->isCurrent(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE)) { // strings like 'Nette\Object'
