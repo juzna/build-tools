@@ -12,7 +12,7 @@ $project->netteLoader = function($folder) use ($project) {
 	// scan for classes
 	$folder = realpath($folder);
 	$robot = new Nette\Loaders\RobotLoader;
-	$robot->setCacheStorage(new Nette\Caching\DummyStorage());
+	$robot->setCacheStorage(new Nette\Caching\Storages\DevNullStorage);
 	$robot->addDirectory($folder);
 	$robot->rebuild();
 

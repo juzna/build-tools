@@ -66,13 +66,13 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	};
 
 	while (($token = $parser->fetch()) !== FALSE) {
- 		if ($parser->is(T_NAMESPACE)) {
+ 		if ($parser->isCurrent(T_NAMESPACE)) {
 			$namespace = (string) $parser->fetchAll(T_STRING, T_NS_SEPARATOR);
 			if ($parser->fetch(';', '{') === '{') {
 				$s .= '{';
 			}
 
-		} elseif ($parser->is(T_USE)) {
+		} elseif ($parser->isCurrent(T_USE)) {
 			if ($parser->isNext('(')) { // closure?
 				$s .= $token;
 				continue;
@@ -86,25 +86,25 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			} while ($parser->fetch(','));
 			$parser->fetch(';');
 
-		} elseif ($parser->is(T_INSTANCEOF, T_EXTENDS, T_IMPLEMENTS, T_NEW, T_CLASS, T_INTERFACE)) {
+		} elseif ($parser->isCurrent(T_INSTANCEOF, T_EXTENDS, T_IMPLEMENTS, T_NEW, T_CLASS, T_INTERFACE)) {
 			do {
 				$s .= $token
 					. $parser->fetchAll(T_WHITESPACE)
 					. $replaceClass($parser->fetchAll(T_STRING, T_NS_SEPARATOR));
 			} while ($token = $parser->fetch(','));
 
-		} elseif ($parser->is(T_STRING, T_NS_SEPARATOR)) { // Class:: or typehint
+		} elseif ($parser->isCurrent(T_STRING, T_NS_SEPARATOR)) { // Class:: or typehint
 			$identifier = $token . $parser->fetchAll(T_STRING, T_NS_SEPARATOR);
  			$s .= $parser->isNext(T_DOUBLE_COLON, T_VARIABLE) ? $replaceClass($identifier) : $identifier;
 
-		} elseif ($parser->is(T_DOC_COMMENT, T_COMMENT)) {
+		} elseif ($parser->isCurrent(T_DOC_COMMENT, T_COMMENT)) {
 			// @var Class or \Class or Nm\Class or Class:: (preserves CLASS, @package)
  			$s .= preg_replace_callback('#((?:@var(?:\s+array of)?|returns?|param|throws|@link|property[\w-]*|@package)\s+)?(?<=\W)(\\\\?[A-Z][\w\\\\]+)(::)?()#', function($m) use ($replaceClass) {
 				return $m[1] . (substr($m[1], 0, 8) !== '@package' && preg_match('#[a-z]#', $m[2]) && ($m[1] || $m[3] || strpos($m[2], '\\') !== FALSE) ? $replaceClass($m[2]) : $m[2]) . $m[3];
- 			}, $token);
+			}, $token);
 
- 		} elseif ($parser->is(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE)) { // strings like 'Nette\Object'
- 			$sl = $parser->is(T_CONSTANT_ENCAPSED_STRING) ? '1' : '1,2'; // num of slashes
+ 		} elseif ($parser->isCurrent(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE)) { // strings like 'Nette\Object'
+ 			$sl = $parser->isCurrent(T_CONSTANT_ENCAPSED_STRING) ? '1' : '1,2'; // num of slashes
  			$s .= preg_replace_callback('#Nette\\\\{'.$sl.'}(\w+\\\\{'.$sl.'})*\w+(?=[ ,.:\'()])#', function($m) use ($replaceClass) {
 				return $replaceClass(str_replace('\\\\', '\\', $m[0]));
  			}, $token);
@@ -119,7 +119,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$parser = new PhpParser($s);
 	$s = '';
 	while (($token = $parser->fetch()) !== FALSE) {
- 		if ($parser->is(T_FUNCTION) && $parser->isNext('(')) { // lamda functions
+ 		if ($parser->isCurrent(T_FUNCTION) && $parser->isNext('(')) { // lamda functions
  			$parser->fetch('(');
 			$token = "create_function('" . $parser->fetchUntil(')') . "', '";
 			$parser->fetch(')');
@@ -185,78 +185,15 @@ class NClosureFix
  *
  * @author     David Grudl
  */
-class PhpParser
+class PhpParser extends Nette\Utils\Tokenizer
 {
-	/** @var array */
-	public $ignored = array(T_COMMENT, T_DOC_COMMENT, T_WHITESPACE);
-
-	/** @var int */
-	private $pos = 0;
-
-	/** @var array */
-	private $tokens;
-
-	private $current;
-
 
 	function __construct($code)
 	{
-		$this->tokens = token_get_all($code);
-	}
-
-
-	function fetch()
-	{
-		return $this->scan(func_get_args(), TRUE);
-	}
-
-
-	function fetchAll($args)
-	{
-		return $this->scan(func_get_args(), FALSE);
-	}
-
-
-	function fetchUntil($args)
-	{
-		return $this->scan(func_get_args(), FALSE, TRUE, TRUE);
-	}
-
-
-	function isNext()
-	{
-		return (bool) $this->scan(func_get_args(), TRUE, FALSE);
-	}
-
-
-	function is()
-	{
-		return in_array($this->current, func_get_args(), TRUE);
-	}
-
-
-	private function scan($allowed, $first, $advance = TRUE, $neg = FALSE)
-	{
-		$res = FALSE;
-		$pos = $this->pos;
-		while (isset($this->tokens[$pos])) {
-			$token = $this->tokens[$pos++];
-			$r = is_array($token) ? $token[0] : $token;
-			if (!$allowed || in_array($r, $allowed, TRUE) ^ $neg) {
-				if ($advance) {
-					$this->pos = $pos;
-					$this->current = $r;
-				}
-				$res .= is_array($token) ? $token[1] : $token;
-				if ($first) {
-					break;
-				}
-
-			} elseif (!in_array($r, $this->ignored, TRUE)) {
-				break;
-			}
+		$this->ignored = array(T_COMMENT, T_DOC_COMMENT, T_WHITESPACE);
+		foreach (token_get_all($code) as $token) {
+			$this->tokens[] = is_array($token) ? self::createToken($token[1], $token[0]) : $token;
 		}
-		return $res;
 	}
 
 }

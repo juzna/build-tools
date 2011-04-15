@@ -10,8 +10,8 @@ How to build your own Nette Framework
 3) In the main directory of the distribution (the one that this file is in), type
    the following to make all versions of Nette Framework:
 
-   make 
-   
+   make
+
    options:
 		-f <file>   build file (build.php by default)
 		-t <target> target (main by default)
@@ -19,4 +19,4 @@ How to build your own Nette Framework
 
    To create a 0.9.x distribution use:
 
-   make -a v0.9.x -a 0.9.7 
+   make -a v0.9.x -a 0.9.7

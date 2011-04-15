@@ -9,8 +9,8 @@
  * Can be used for version 2.0 and 0.9.5 or higher (branch v0.9.x).
  */
 
-require 'tools/Nette/loader.php';
-use Nette\Finder;
+require 'tools/Nette/nette.min.php';
+use Nette\Utils\Finder;
 
 
 // configuration
