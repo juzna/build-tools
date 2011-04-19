@@ -168,6 +168,8 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 		$project->delete("$dir53/tools/license.txt");
 		$project->delete("$dir52p/tools/license.txt");
 		$project->delete("$dir52n/tools/license.txt");
+		$project->delete("$dir52p/tools/Code-Migration");
+		$project->delete("$dir52n/tools/Code-Migration");
 	}
 
 
