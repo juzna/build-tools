@@ -1,7 +1,7 @@
 <?php
 
 /**
- * API Generator.
+ * ApiGen - API Generator.
  *
  * Copyright (c) 2010 David Grudl (http://davidgrudl.com)
  *
@@ -11,7 +11,8 @@
 
 namespace Apigen;
 
-use NetteX;
+use NetteX,
+	NetteX\Utils\Strings;
 
 
 
@@ -62,10 +63,40 @@ class Model extends NetteX\Object
 	 */
 	public function expand()
 	{
+		$found = array();
 		foreach ($this->classes as $name => $class) {
-			foreach (array_merge(class_parents($name), $class->getInterfaceNames()) as $parent) {
-				if (!isset($this->classes[$parent])) {
-					$this->classes[$parent] = new CustomClassReflection($parent);
+			$found = array_merge($found, array_values(class_parents($name)));
+			$found = array_merge($found, $class->getInterfaceNames());
+
+			foreach ($class->getOwnMethods() as $method) {
+				foreach ($method->getParameters() as $param) { // type hints
+					try {
+						if ($tmp = $param->getClass()) {
+							$found[] = $tmp->getName();
+						}
+					} catch (\ReflectionException $e) {
+					}
+				}
+
+				foreach (array('param', 'return', 'throws') as $annotation) {
+				    if (isset($method->annotations[$annotation])) {
+						foreach ($method->annotations[$annotation] as $doc) {
+							$found = array_merge($found, self::splitAnnotation($doc));
+						}
+					}
+				}
+			}
+
+			foreach ($class->getOwnProperties() as $property) {
+				$found = array_merge($found, self::splitAnnotation($property->getAnnotation('var')));
+			}
+		}
+
+		foreach ($found as $name) {
+			if (!isset($this->classes[$name]) && (class_exists($name) || interface_exists($name))) {
+				$class = new CustomClassReflection($name);
+				if ($class->isInternal() || Strings::startsWith($class->getFileName(), $this->dir . DIRECTORY_SEPARATOR)) {
+					$this->classes[$class->getName()] = $class;
 				}
 			}
 		}
@@ -149,16 +180,13 @@ class Model extends NetteX\Object
 
 
 	/**
-	 * Helpers for DocBlock extracting.
-	 * @param  string
-	 * @return string
+	 * Splits to type|type|type and description.
+	 * @return array
 	 */
-	public static function extractDocBlock($doc)
+	public static function splitAnnotation($s, & $description = NULL)
 	{
-		$doc = trim($doc, '/*');
-		$doc = preg_replace('#^\s*\**\s*(@var \S+\s*|@.*)#ms', '', $doc); // remove annotations
-		$doc = preg_replace('#^\s*\** ?#m', '', $doc); // remove stars
-		return NetteX\StringUtils::normalize(trim($doc));
+		list($types, $description) = preg_split('#\s+|$#', $s, 2);
+		return explode('|', $types);
 	}
 
 }

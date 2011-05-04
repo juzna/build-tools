@@ -18,10 +18,10 @@
 	<table class="summary">
 	<caption>Class summary</caption>
 	{foreach $classes as $class}
-	{continueIf $class->interface || $class->isSubclassOf(Exception)}
+	{continueIf $class->interface || $class->exception}
 	<tr>
-		<td width="20%"><a href="{$class|classLink}">{$class->shortName}</a></td>
-		<td>{!$class->docComment|docline}</td>
+		<td width="20%"><a href="{$class|classLink}">{ifset $namespace}{$class->shortName}{else}{$class->name}{/ifset}</a></td>
+		<td>{!$class->description|texyline}</td>
 	</tr>
 	{/foreach}
 	</table>
@@ -31,8 +31,8 @@
 	{foreach $classes as $class}
 	{continueIf !$class->interface}
 	<tr>
-		<td width="20%"><a href="{$class|classLink}">{$class->shortName}</a></td>
-		<td>{!$class->docComment|docline}</td>
+		<td width="20%"><a href="{$class|classLink}">{ifset $namespace}{$class->shortName}{else}{$class->name}{/ifset}</a></td>
+		<td>{!$class->description|texyline}</td>
 	</tr>
 	{/foreach}
 	</table>
@@ -40,10 +40,10 @@
 	<table class="summary">
 	<caption>Exception summary</caption>
 	{foreach $classes as $class}
-	{continueIf !$class->isSubclassOf(Exception)}
+	{continueIf !$class->exception}
 	<tr>
 		<td width="20%"><a href="{$class|classLink}">{$class->shortName}</a></td>
-		<td>{!$class->docComment|docline}</td>
+		<td>{!$class->description|texyline}</td>
 	</tr>
 	{/foreach}
 	</table>

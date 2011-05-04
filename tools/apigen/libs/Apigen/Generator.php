@@ -1,7 +1,7 @@
 <?php
 
 /**
- * API Generator.
+ * ApiGen - API Generator.
  *
  * Copyright (c) 2010 David Grudl (http://davidgrudl.com)
  *
@@ -57,7 +57,7 @@ class Generator extends NetteX\Object
 		$allClasses = array();
 		foreach ($this->model->getClasses() as $class) {
 			$namespaces[$class->isInternal() ? 'PHP' : $class->getNamespaceName()][$class->getShortName()] = $class;
-			$allClasses[$class->getShortName()] = $class;
+			$allClasses[$class->getName()] = $class;
 		}
 		uksort($namespaces, 'strcasecmp');
 		uksort($allClasses, 'strcasecmp');
@@ -118,8 +118,8 @@ class Generator extends NetteX\Object
 		$template->setCacheStorage(new NetteX\Caching\Storages\MemoryStorage);
 
 		$latte = new NetteX\Latte\Engine;
-		$latte->handler->macros['try'] = '<?php try { ?>';
-		$latte->handler->macros['/try'] = '<?php } catch (\Exception $e) {} ?>';
+		$latte->parser->macros['try'] = '<?php try { ?>';
+		$latte->parser->macros['/try'] = '<?php } catch (\Exception $e) {} ?>';
 		$template->registerFilter($latte);
 
 		// common operations
@@ -129,8 +129,9 @@ class Generator extends NetteX\Object
 		$template->registerHelper('map', function($arr, $callback) {
 			return array_map(create_function('$value', $callback), $arr);
 		});
-		$template->registerHelper('replaceRE', 'NetteX\StringUtils::replace');
+		$template->registerHelper('replaceRE', 'NetteX\Utils\Strings::replace');
 		$template->registerHelper('replaceNS', function($name, $namespace) { // remove current namespace
+			$name = ltrim($name, '\\');
 			return (strpos($name, $namespace . '\\') === 0 && strpos($name, '\\', strlen($namespace) + 1) === FALSE)
 				? substr($name, strlen($namespace) + 1) : $name;
 		});
@@ -140,51 +141,45 @@ class Generator extends NetteX\Object
 		});
 
 		// links
-		$template->registerHelper('namespaceLink', callback($this, 'formatNamespaceLink'));
-		$template->registerHelper('classLink', callback($this, 'formatClassLink'));
-		$template->registerHelper('sourceLink', callback($this, 'formatSourceLink'));
+		$template->registerHelper('namespaceLink', callbackX($this, 'formatNamespaceLink'));
+		$template->registerHelper('classLink', callbackX($this, 'formatClassLink'));
+		$template->registerHelper('sourceLink', callbackX($this, 'formatSourceLink'));
 
 		// docblock
 		$texy = new \TexyX;
+		$texy->mergeLines = FALSE;
+		$texy->allowedTags = array_flip(array('b', 'i', 'em', 'kbd', 'var', 'p', 'ul', 'ol', 'li'));
 		$texy->allowed['list/definition'] = FALSE;
 		$texy->allowed['phrase/em-alt'] = FALSE;
+		$texy->allowed['longwords'] = FALSE;
+
 		$texy->registerBlockPattern( // highlight <code>, <pre>
 			function($parser, $matches, $name) use ($fshl) {
 				$content = $matches[1] === 'code' ? $fshl->highlightString('PHP', $matches[2]) : htmlSpecialChars($matches[2]);
 				$content = $parser->getTexy()->protect($content, \TexyX::CONTENT_BLOCK);
 				return \TexyXHtml::el('pre', $content);
 			},
-			'#^<(code|pre)>\n(.+?)\n</\1>$#ms', // block patterns must be multiline and line-anchored
+			'#<(code|pre)>(.+?)</\1>#s',
 			'codeBlockSyntax'
 		);
 
-		$template->registerHelper('docline', function($doc, $line = TRUE) use ($texy) {
-			$doc = Model::extractDocBlock($doc);
-			$doc = preg_replace('#\n.*#s', '', $doc); // leave only first line
-			return $line ? $texy->processLine($doc) : $texy->process($doc);
+		$template->registerHelper('texyline', function($text, $block = TRUE) use ($texy) {
+			return $texy->process(preg_replace('#\n.*#s', '', $text), $block);
 		});
 
-		$template->registerHelper('docblock', function($doc) use ($texy) {
-			return $texy->process(Model::extractDocBlock($doc));
-		});
+		$template->registerHelper('texy', callbackX($texy, 'process'));
 
-		// types
 		$model = $this->model;
-		$template->registerHelper('getTypes', function($element, $position = NULL) use ($model) {
-			$namespace = $element->getDeclaringClass()->getNamespaceName();
-			$s = $position === NULL ? $element->getAnnotation($element instanceof \ReflectionProperty ? 'var' : 'return')
-				: @$element->annotations['param'][$position];
-			if (is_object($s)) {
-				$s = get_class($s); // TODO
-			}
-			$s = preg_replace('#\s.*#', '', $s);
+		$template->registerHelper('doclabel', function($doc, $namespace, $short = FALSE) use ($template, $model) {
 			$res = array();
-			foreach (explode('|', $s) as $name) {
-				$res[] = (object) array('name' => $name, 'class' => $model->resolveType($name, $namespace));
+			foreach (Model::splitAnnotation($doc, $description) as $name) {
+				$class = $model->resolveType($name, $namespace);
+				$name = $template->replaceNS($name, $namespace);
+				$res[] = $class ? sprintf('<a href="%s">%s</a>', $template->classLink($class), $template->escapeHtml($name))
+					: $template->escapeHtml($name);
 			}
-			return $res;
+			return implode('|', $res) . ($short ? '' : ' ' . $template->texyline($description));
 		});
-		$template->registerHelper('resolveType', callback($model, 'resolveType'));
 
 		return $template;
 	}
@@ -239,9 +234,13 @@ class Generator extends NetteX\Object
 		$class = $element instanceof \ReflectionClass ? $element : $element->getDeclaringClass();
 		if ($class->isInternal()) {
 			if ($element instanceof \ReflectionClass) {
-				return strtolower('http://php.net/manual/class.' . $class->getName() . '.php');
+				if (in_array($class->getName(), array('stdClass', 'Closure', 'Directory'))) {
+					return 'http://php.net/manual/reserved.classes.php';
+				} else {
+					return 'http://php.net/manual/class.' . strtolower($class->getName()) . '.php';
+				}
 			} else {
-				return strtolower('http://php.net/manual/' . $class->getName() . '.' . strtr(ltrim($element->getName(), '_'), '_', '-') . '.php');
+				return 'http://php.net/manual/' . strtolower($class->getName() . '.' . strtr(ltrim($element->getName(), '_'), '_', '-')) . '.php';
 			}
 		} else {
 			$file = substr($element->getFileName(), strlen($this->model->getDirectory()) + 1);

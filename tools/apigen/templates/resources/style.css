@@ -1,5 +1,5 @@
 /*!
-	(c) David Grudl, Martin Cohen, JÃ¶rn Zaefferer
+	(c) David Grudl, Martin Cohen, Jörn Zaefferer
 */
 
 body {
@@ -108,6 +108,10 @@ pre {
 	list-style: none;
 	padding: 0 0 0 0px;
 	margin: 0;
+}
+
+#left li {
+	white-space: nowrap;
 }
 
 #left ul ul {
@@ -284,6 +288,10 @@ tr .detailed {
 div.smallList {
 	padding:0 0 10px 25px;
 	margin:0;
+}
+
+.deprecated {
+	opacity: .5;
 }
 
 
