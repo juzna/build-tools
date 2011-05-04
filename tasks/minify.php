@@ -31,10 +31,15 @@ $project->minify = function($source, $dest, $useNamespaces = TRUE) use ($project
 
 	// put all files
 	foreach ($files as $file) {
-		if (basename($file) !== 'NetteLoader.php') {
+		if (basename($file) === 'NetteLoader.php') {
+			continue;
+		} elseif (basename($file) === 'Debugger.php') {
+			$last = $file;
+		} else {
 			$shrink->addFile($file);
 		}
 	}
+	$shrink->addFile($last);
 
 	$content = $shrink->getOutput();
 	$content = substr_replace($content, "<?php //netteloader=Nette\\Framework\n", 0, 5);
@@ -64,10 +69,14 @@ class ShrinkPHP
 
 	private $namespace;
 
+	private $files;
+
 
 
 	public function addFile($file)
 	{
+		$this->files[realpath($file)] = TRUE;
+
 		$content = file_get_contents($file);
 
 		// special handling for Connection.php && Statement.php
@@ -178,7 +187,9 @@ class ShrinkPHP
 					if ($newFile && realpath($newFile)) {
 						$oldNamespace = $this->namespace;
 
-						$this->addFile($newFile);
+						if ($pending !== T_REQUIRE_ONCE || !isset($this->files[realpath($newFile)])) {
+							$this->addFile($newFile);
+						}
 
 						if (!$this->inPHP && $name !== T_CLOSE_TAG) {
 							$this->output .= '<?php ';
