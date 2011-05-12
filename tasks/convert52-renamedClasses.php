@@ -56,7 +56,6 @@ return array(
 	'Nette\Latte\ParseException' => 'LatteException',
 	'Nette\Caching\OutputHelper' => 'CachingHelper',
 	'Nette\Templating\FilterException' => 'TemplateException',
-	'Nette\Templating\PhpFileStorage' => 'TemplateCacheStorage',
 	'Nette\Templating\DefaultHelpers' => 'TemplateHelpers',
 	'Nette\Http\Context' => 'HttpContext',
 	'Nette\Http\IRequest' => 'IHttpRequest',
@@ -65,4 +64,6 @@ return array(
 	'Nette\Http\Response' => 'HttpResponse',
 	'Nette\Http\RequestFactory' => 'HttpRequestFactory',
 	'Nette\Http\FileUpload' => 'HttpUploadedFile',
+	'Nette\DI\Container' => 'DiContainer',
+	'Nette\DI\IContainer' => 'IDiContainer',
 );

@@ -31,7 +31,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$s = str_replace('$application->onStartup[] = function() {', '{', $s); // bootstrap.php
 	$s = str_replace('$application->onStartup[] = function() use ($application) {', '{', $s); // bootstrap.php
 	$s = str_replace('$form::', 'Form::', $s); // Form examples
-	$prefixed && $s = str_replace('Nette\Database\Drivers\\\\', 'N', $s); // Nette\Database\Connection.php
+	$s = str_replace('Nette\Database\Drivers\\\\', $prefixed ? 'N' : '', $s); // Nette\Database\Connection.php
 
 
 	// remove namespaces and add prefix
@@ -148,7 +148,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			}
 
 			$token .= substr(var_export(substr(trim($body), 1, -1), TRUE), 1, -1) . "')";
-			if (strpos($orig, 'Strings::replace') || strpos($orig, '$context->addService')) {
+			if (strpos($orig, 'Strings::replace') || strpos($orig, '->addService')) {
 				$token = "callback($token)";
 			}
 		}
