@@ -39,7 +39,9 @@ $project->minify = function($source, $dest, $useNamespaces = TRUE) use ($project
 			$shrink->addFile($file);
 		}
 	}
-	$shrink->addFile($last);
+	if (isset($last)) {
+		$shrink->addFile($last);
+	}
 
 	$content = $shrink->getOutput();
 	$content = substr_replace($content, "<?php //netteloader=Nette\\Framework\n", 0, 5);

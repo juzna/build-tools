@@ -23,6 +23,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$s = str_replace('__DIR__', 'dirname(__FILE__)', $s);
 	$s = str_replace('new static', 'new self', $s);
 	$s = str_replace('static::', 'self::', $s);
+	$s = str_replace('get_called_class()', '__CLASS__', $s);
 	$s = preg_replace('#=(.+) \?: #', '= ($tmp=$1) ? $tmp : ', $s); // expand ternary short cut
 	$s = preg_replace('#/\\*5\.2\*\s*(.*?)\s*\\*/#s', '$1', $s); // uncomment /*5.2* */
 	$s = preg_replace('#/\\*\\*/.*?/\\*\\*/\\s*#s', '', $s);  // remove /**/ ... /**/
@@ -112,7 +113,7 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			}, $token);
 
  		} elseif ($parser->isCurrent(T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE)) { // strings like 'Nette\Object'
- 			$sl = $parser->isCurrent(T_CONSTANT_ENCAPSED_STRING) ? '1' : '1,2'; // num of slashes
+ 			$sl = $parser->isCurrent(T_CONSTANT_ENCAPSED_STRING) ? '1' : '1,2'; // num of slashes, for 0.9 compatibility
  			$s .= preg_replace_callback('#Nette\\\\{'.$sl.'}(\w+\\\\{'.$sl.'})*\w+(?=[ ,.:\'()])#', function($m) use ($replaceClass) {
 				return $replaceClass(str_replace('\\\\', '\\', $m[0]));
  			}, $token);
@@ -144,13 +145,10 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			} while ($parser->fetch() && !$parser->isNext(',', ';', ')'));
 
 			if (strpos($body, 'function(')) {
-				throw new Exception('Nested closure');
+				throw new Exception("Nested closure in $file");
 			}
 
 			$token .= substr(var_export(substr(trim($body), 1, -1), TRUE), 1, -1) . "')";
-			if (strpos($orig, 'Strings::replace') || strpos($orig, '->addService')) {
-				$token = "callback($token)";
-			}
 		}
 		$s .= $token;
 	}
