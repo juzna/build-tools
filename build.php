@@ -106,14 +106,14 @@ $project->main = function($branch = 'master', $label = '2.0dev', $tag = NULL) us
 	// build 5.2 prefix package
 	$project->log("Building 5.2 prefixed package");
 	foreach (Finder::findFiles('*.php', '*.phpt', '*.inc', '*.phtml', '*.latte')->from($dir52p)->exclude('www/adminer') as $file) {
-		$project->convert52($file, TRUE);
+		$project->convert52($file, array('prefix' => 'N'));
 	}
 	$project->netteLoader("$dir52p/Nette");
 
 	// build 5.2 nonprefix package
 	$project->log("Building 5.2-nonprefix package");
 	foreach (Finder::findFiles('*.php', '*.phpt', '*.inc', '*.phtml', '*.latte')->from($dir52n)->exclude('www/adminer') as $file) {
-		$project->convert52($file, FALSE);
+		$project->convert52($file);
 	}
 	$project->netteLoader("$dir52n/Nette");
 

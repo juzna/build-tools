@@ -8,7 +8,12 @@
  * @param  bool    prefixed?
  * @return void
  */
-$project->convert52 = function(SplFileInfo $file, $prefixed) {
+$project->convert52 = function(SplFileInfo $file, array $options = null) {
+	// Prepare options
+	$zendStyle = (bool) @$options['zend-style'];
+	$classPrefix = @$options['class-prefix'] ?: @$options['prefix'];
+	$interfacePrefix = @$options['interface-prefix'];
+	$prefixed = !empty($classPrefix) || !empty($interfacePrefix);
 
 	$s = $orig = file_get_contents($file);
 
@@ -28,19 +33,20 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 	$s = preg_replace('#/\\*5\.2\*\s*(.*?)\s*\\*/#s', '$1', $s); // uncomment /*5.2* */
 	$s = preg_replace('#/\\*\\*/.*?/\\*\\*/\\s*#s', '', $s);  // remove /**/ ... /**/
 	$s = preg_replace("#'NETTE_PACKAGE', '.*'#", "'NETTE_PACKAGE', 'PHP 5.2" . ($prefixed ? ' prefixed' : '') . "'", $s); // loader.php
-	$s = str_replace('{=Nette\Framework::VERSION', '{=' . ($prefixed ? 'N' : '') . 'Framework::VERSION', $s); // Homepage\default.latte
+	$s = str_replace('{=Nette\Framework::VERSION', '{=' . $classPrefix . 'Framework::VERSION', $s); // Homepage\default.latte
 	$s = str_replace('$application->onStartup[] = function() {', '{', $s); // bootstrap.php
 	$s = str_replace('$application->onStartup[] = function() use ($application) {', '{', $s); // bootstrap.php
 	$s = str_replace('$form::', 'Form::', $s); // Form examples
-	$s = str_replace('Nette\Database\Drivers\\\\', $prefixed ? 'N' : '', $s); // Nette\Database\Connection.php
+	$s = str_replace('Nette\Database\Drivers\\\\', $classPrefix, $s); // Nette\Database\Connection.php
 
 
 	// remove namespaces and add prefix
 	$parser = new PhpParser($s);
-	$namespace = $s = '';
-	$uses = array('' => '');
+	$namespace = ''; // Actual namespace 
+	$s = ''; // Return code, to be generated
+	$uses = array('' => ''); // Map shortName -> fullName
 
-	$replaceClass = function ($class) use ($prefixed, &$namespace, &$uses, $renamed) {
+	$replaceClass = function ($class) use ($prefixed, $classPrefix, $interfacePrefix, $zendStyle, &$namespace, &$uses, $renamed) {
 		if ($class === 'parent' || $class === 'self') {
 			return $class;
 		}
@@ -51,13 +57,17 @@ $project->convert52 = function(SplFileInfo $file, $prefixed) {
 			: $namespace . '\\' . $class;
 		$full = ltrim($full, '\\');
 		$short = substr($full, strrpos("\\$full", '\\'));
+		
+		if($zendStyle) {
+			return str_replace('\\', '_', $full);
 
-		if (substr($full, 0, 6) === 'Nette\\') {
+		} elseif (substr($full, 0, 6) === 'Nette\\') {
 			if (isset($renamed[$full])) {
 				$short = $renamed[$full];
 			}
-			if ($prefixed && preg_match('#^(?!I[A-Z])[A-Z]#', $short)) {
-				return "N$short";
+			if ($prefixed) {
+				if(preg_match('#^(?!I[A-Z])[A-Z]#', $short)) return $classPrefix . $short;
+				else return $interfacePrefix . $short;
 
 			} else {
 				return ltrim($short, '\\');
